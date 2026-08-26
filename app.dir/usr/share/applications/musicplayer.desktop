@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories=Music
+Comment=Music Player Tool
+Exec=musicplayer
+Icon=/home/sammy/.local/share/icons/MacTahoe/apps/scalable/lx-music-desktop.svg
+Name=Musicplayer
+StartupNotify=true
+StartupWMClass=musicplayer
+Terminal=false
+Type=Application
