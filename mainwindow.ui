@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1280</width>
-    <height>1024</height>
+    <width>652</width>
+    <height>503</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -30,47 +30,6 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QTextEdit" name="lyricsView">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>1</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="midLineWidth">
-         <number>3</number>
-        </property>
-        <property name="autoFormatting">
-         <set>QTextEdit::AutoAll</set>
-        </property>
-        <property name="documentTitle">
-         <string/>
-        </property>
-        <property name="lineWrapMode">
-         <enum>QTextEdit::WidgetWidth</enum>
-        </property>
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="html">
-         <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'思源宋体 CN'; font-size:12pt; font-weight:200; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;歌词将显示在这里&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="plainText">
-         <string>歌词将显示在这里</string>
-        </property>
-        <property name="overwriteMode">
-         <bool>true</bool>
-        </property>
-        <property name="tabStopDistance">
-         <double>80.000000000000000</double>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item>
@@ -81,18 +40,11 @@ p, li { white-space: pre-wrap; }
      </widget>
     </item>
     <item>
-     <widget class="QLabel" name="currentSongLabel">
-      <property name="text">
-       <string>当前播放: 无</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QLabel" name="timeLabel">
+       <widget class="QLabel" name="currentSongLabel">
         <property name="text">
-         <string>0:00 / 0:00</string>
+         <string>当前播放: 无</string>
         </property>
        </widget>
       </item>
@@ -108,6 +60,13 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
        </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="timeLabel">
+        <property name="text">
+         <string>0:00 / 0:00</string>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QLabel" name="volumeLabel">
@@ -202,13 +161,6 @@ p, li { white-space: pre-wrap; }
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="equalizerButton">
-        <property name="text">
-         <string>均衡器</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
@@ -218,8 +170,8 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1280</width>
-     <height>31</height>
+     <width>652</width>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -231,7 +183,23 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionExport_Playlist"/>
     <addaction name="actionImport_Playlist"/>
    </widget>
+   <widget class="QMenu" name="menuPlugins">
+    <property name="title">
+     <string>插件</string>
+    </property>
+    <addaction name="actionEqualizer"/>
+    <addaction name="actionLyrics"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>关于</string>
+    </property>
+    <addaction name="actionCheck_Update"/>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuPlugins"/>
+   <addaction name="menuAbout"/>
   </widget>
   <action name="actionImport_File">
    <property name="text">
@@ -251,6 +219,26 @@ p, li { white-space: pre-wrap; }
   <action name="actionImport_Playlist">
    <property name="text">
     <string>导入播放列表</string>
+   </property>
+  </action>
+  <action name="actionEqualizer">
+   <property name="text">
+    <string>均衡器</string>
+   </property>
+  </action>
+  <action name="actionLyrics">
+   <property name="text">
+    <string>歌词</string>
+   </property>
+  </action>
+  <action name="actionCheck_Update">
+   <property name="text">
+    <string>检查更新</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>关于</string>
    </property>
   </action>
  </widget>

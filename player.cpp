@@ -107,16 +107,21 @@ void Player::next()
         if (m_currentIndex < count - 1) {
             setCurrentIndex(m_currentIndex + 1);
         } else {
-            m_player->stop();
+            // 末首按"下一首"：回到第一首并播放，让按钮始终有反应。
+            // 自动播完末首的停止由 onMediaStatusChanged 处理，保留 Sequential 顺序语义。
+            setCurrentIndex(0);
         }
         break;
     case Random:
         setCurrentIndex(QRandomGenerator::global()->bounded(count));
         break;
     case RepeatOne:
-        // 单曲循环，不需要改变索引
-        m_player->setPosition(0);
-        m_player->play();
+        // 手动按"下一首"应切歌（单曲循环语义仅作用于自动播完重播）
+        if (m_currentIndex < count - 1) {
+            setCurrentIndex(m_currentIndex + 1);
+        } else {
+            setCurrentIndex(0);
+        }
         break;
     case RepeatList:
         if (m_currentIndex < count - 1) {
@@ -146,9 +151,12 @@ void Player::previous()
         setCurrentIndex(QRandomGenerator::global()->bounded(count));
         break;
     case RepeatOne:
-        // 单曲循环，不需要改变索引
-        m_player->setPosition(0);
-        m_player->play();
+        // 手动按"上一首"应切歌（单曲循环语义仅作用于自动播完重播）
+        if (m_currentIndex > 0) {
+            setCurrentIndex(m_currentIndex - 1);
+        } else {
+            setCurrentIndex(count - 1);
+        }
         break;
     }
 }
@@ -220,7 +228,16 @@ void Player::setCurrentIndex(int index)
 void Player::onMediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
     if (status == QMediaPlayer::EndOfMedia) {
-        next();
+        if (m_playMode == RepeatOne) {
+            // 单曲循环：自动播完重播当前（不切歌）
+            m_player->setPosition(0);
+            m_player->play();
+        } else if (m_playMode == Sequential && m_currentIndex >= m_mediaList.size() - 1) {
+            // Sequential 自动播完末首应停止（不循环，保留顺序语义）
+            m_player->stop();
+        } else {
+            next();
+        }
     }
 }
 

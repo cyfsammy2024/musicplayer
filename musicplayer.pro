@@ -8,14 +8,16 @@ SOURCES += main.cpp \
     playlistmodel.cpp \
     player.cpp \
     lyricsmanager.cpp \
-    equalizerwindow.cpp
+    equalizerwindow.cpp \
+    lyricswindow.cpp
 
 HEADERS += \
     mainwindow.h \
     playlistmodel.h \
     player.h \
     lyricsmanager.h \
-    equalizerwindow.h
+    equalizerwindow.h \
+    lyricswindow.h
 
 FORMS += \
     mainwindow.ui

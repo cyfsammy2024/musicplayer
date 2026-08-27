@@ -5,6 +5,7 @@
 #include "player.h"
 #include "playlistmodel.h"
 #include "equalizerwindow.h"
+#include "lyricswindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -34,7 +35,8 @@ private slots:
     void on_actionExport_Playlist_triggered();
     void on_actionImport_Playlist_triggered();
     void on_clearPlaylistButton_clicked();
-    void on_equalizerButton_clicked();
+    void on_actionEqualizer_triggered();
+    void on_actionLyrics_triggered();
 
     void onPositionChanged(qint64 position);
     void onDurationChanged(qint64 duration);
@@ -48,6 +50,8 @@ private slots:
     void onEqualizerSettingsChanged(const QList<int> &settings);
     void onPlaylistContextMenu(const QPoint &pos);
     void onRemoveSelected();
+    void on_actionCheck_Update_triggered();
+    void on_actionAbout_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -58,6 +62,7 @@ private:
     QList<QPair<qint64, QString>> m_lyricsList; // 存储所有歌词的列表
     qint64 m_currentPosition = 0; // 当前播放位置（毫秒），用于按时间定位歌词索引
     EqualizerWindow *m_equalizerWindow;
+    LyricsWindow *m_lyricsWindow;
 
     void updatePlayModeButton();
     void updateProgressBar();

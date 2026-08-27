@@ -6,6 +6,9 @@
 #include <QMenu>
 #include <QAction>
 #include <QAbstractItemView>
+#include <QMessageBox>
+#include <QDesktopServices>
+#include <QUrl>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -15,9 +18,11 @@ MainWindow::MainWindow(QWidget *parent) :
     m_currentPlayMode(Player::Sequential),
     m_updatingProgressBar(false),
     m_lyricsList(),
-    m_equalizerWindow(nullptr)
+    m_equalizerWindow(nullptr),
+    m_lyricsWindow(nullptr)
 {
     ui->setupUi(this);
+    m_lyricsWindow = new LyricsWindow(this);
 
     m_player->setMediaList(m_playlistModel->mediaList());
 
@@ -255,9 +260,9 @@ void MainWindow::onAllLyricsChanged(const QList<QPair<qint64, QString>> &lyricsL
         allLyrics += lyric.second + "\n";
     }
     if (allLyrics.isEmpty()) {
-        ui->lyricsView->setText("歌词将显示在这里");
+        m_lyricsWindow->setLyricsText("歌词将显示在这里");
     } else {
-        ui->lyricsView->setText(allLyrics);
+        m_lyricsWindow->setLyricsText(allLyrics);
     }
 }
 
@@ -350,7 +355,7 @@ void MainWindow::loadState()
 void MainWindow::onLyricsChanged(const QString &lyrics)
 {
     if (lyrics.isEmpty()) {
-        ui->lyricsView->setText("歌词将显示在这里");
+        m_lyricsWindow->setLyricsText("歌词将显示在这里");
         return;
     }
 
@@ -390,7 +395,7 @@ void MainWindow::onLyricsChanged(const QString &lyrics)
 
     // white-space: pre-wrap 保留纯文本歌词（无时间戳的单条目）的换行，
     // 避免 HTML 默认空白折叠把多行压成一段红字。
-    ui->lyricsView->setHtml(lyricsHtml);
+    m_lyricsWindow->setLyricsHtml(lyricsHtml);
 }
 
 void MainWindow::on_clearPlaylistButton_clicked()
@@ -403,7 +408,7 @@ void MainWindow::on_clearPlaylistButton_clicked()
     m_player->stop();
     
     // 清空歌词显示
-    ui->lyricsView->setText("歌词将显示在这里");
+    m_lyricsWindow->setLyricsText("歌词将显示在这里");
     m_lyricsList.clear();
     
     // 重置当前播放歌曲标签
@@ -431,7 +436,7 @@ void MainWindow::onRemoveSelected()
 
     // 列表被删空时重置 UI（参考 on_clearPlaylistButton_clicked）
     if (m_playlistModel->mediaList().isEmpty()) {
-        ui->lyricsView->setText("歌词将显示在这里");
+        m_lyricsWindow->setLyricsText("歌词将显示在这里");
         m_lyricsList.clear();
         ui->currentSongLabel->setText("当前播放: 无");
         ui->progressBar->setValue(0);
@@ -459,13 +464,35 @@ void MainWindow::onPlaylistContextMenu(const QPoint &pos)
     if (chosen == delAct) onRemoveSelected();
 }
 
-void MainWindow::on_equalizerButton_clicked()
+void MainWindow::on_actionCheck_Update_triggered()
+{
+    // 打开 GitHub releases 页面（仓库地址来自 git remote）
+    QDesktopServices::openUrl(QUrl("https://github.com/cyfsammy2024/musicplayer/releases"));
+}
+
+void MainWindow::on_actionAbout_triggered()
+{
+    QMessageBox::about(this, "关于",
+        "音乐播放器 1.0\n\n"
+        "基于 Qt6 (C++) 的桌面音乐播放器\n"
+        "支持格式：MP3 / WAV / FLAC / OGG / M4A\n\n"
+        "功能：内嵌歌词解析、播放列表管理、均衡器、播放模式切换");
+}
+
+void MainWindow::on_actionEqualizer_triggered()
 {
     if (!m_equalizerWindow) {
         m_equalizerWindow = new EqualizerWindow(this);
         connect(m_equalizerWindow, &EqualizerWindow::equalizerSettingsChanged, this, &MainWindow::onEqualizerSettingsChanged);
     }
     m_equalizerWindow->show();
+}
+
+void MainWindow::on_actionLyrics_triggered()
+{
+    m_lyricsWindow->show();
+    m_lyricsWindow->raise();
+    m_lyricsWindow->activateWindow();
 }
 
 void MainWindow::onEqualizerSettingsChanged(const QList<int> &settings)
