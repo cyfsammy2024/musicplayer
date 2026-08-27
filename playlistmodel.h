@@ -30,6 +30,7 @@ public:
 
     void addMedia(const QList<QUrl> &urls);
     void clear();
+    void removeRowsAt(const QList<int> &rows); // 删除指定行（支持多行，自动降序去重）
     void importPlaylist(const QString &fileName);
     void exportPlaylist(const QString &fileName) const;
     void savePlaylist() const;

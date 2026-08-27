@@ -3,6 +3,7 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <QDir>
+#include <algorithm>
 
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractTableModel(parent)
 {
@@ -120,6 +121,28 @@ void PlaylistModel::clear()
     m_mediaList.clear();
     m_fileInfos.clear();
     endResetModel();
+}
+
+void PlaylistModel::removeRowsAt(const QList<int> &rows)
+{
+    if (rows.isEmpty()) return;
+
+    // 去重并降序排序：从后往前删，避免删除时索引错乱
+    QList<int> sorted = rows;
+    std::sort(sorted.begin(), sorted.end(), std::greater<int>());
+    sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
+
+    const int n = m_mediaList.size();
+    for (int r : sorted) {
+        if (r < 0 || r >= n) return; // 范围非法则整体放弃，保持一致性
+    }
+
+    for (int r : sorted) {
+        beginRemoveRows(QModelIndex(), r, r);
+        m_mediaList.removeAt(r);
+        m_fileInfos.removeAt(r);
+        endRemoveRows();
+    }
 }
 
 void PlaylistModel::importPlaylist(const QString &fileName)

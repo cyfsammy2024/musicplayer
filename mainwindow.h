@@ -46,6 +46,8 @@ private slots:
     void onAllLyricsChanged(const QList<QPair<qint64, QString>> &lyricsList);
     void onCurrentIndexChanged(int index);
     void onEqualizerSettingsChanged(const QList<int> &settings);
+    void onPlaylistContextMenu(const QPoint &pos);
+    void onRemoveSelected();
 
 private:
     Ui::MainWindow *ui;
@@ -54,6 +56,7 @@ private:
     Player::PlayMode m_currentPlayMode;
     bool m_updatingProgressBar;
     QList<QPair<qint64, QString>> m_lyricsList; // 存储所有歌词的列表
+    qint64 m_currentPosition = 0; // 当前播放位置（毫秒），用于按时间定位歌词索引
     EqualizerWindow *m_equalizerWindow;
 
     void updatePlayModeButton();

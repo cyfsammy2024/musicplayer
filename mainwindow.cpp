@@ -3,6 +3,9 @@
 #include <QFileDialog>
 #include <QDir>
 #include <QSettings>
+#include <QMenu>
+#include <QAction>
+#include <QAbstractItemView>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -24,6 +27,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->playlistView->setColumnWidth(PlaylistModel::Duration, 100);
     ui->playlistView->setColumnWidth(PlaylistModel::FileSize, 100);
 
+    // 选中按整行 + 扩展多选（Ctrl/Shift），并启用右键自定义菜单（删除选中）
+    ui->playlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->playlistView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    ui->playlistView->setContextMenuPolicy(Qt::CustomContextMenu);
+
     connect(m_player, &Player::positionChanged, this, &MainWindow::onPositionChanged);
     connect(m_player, &Player::durationChanged, this, &MainWindow::onDurationChanged);
     connect(m_player, &Player::playbackStateChanged, this, &MainWindow::onStateChanged);
@@ -32,6 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_player, &Player::lyricsChanged, this, &MainWindow::onLyricsChanged);
     connect(m_player->lyricsManager(), &LyricsManager::allLyricsChanged, this, &MainWindow::onAllLyricsChanged);
     connect(ui->playlistView, &QTableView::doubleClicked, this, &MainWindow::onPlaylistItemDoubleClicked);
+    connect(ui->playlistView, &QWidget::customContextMenuRequested, this, &MainWindow::onPlaylistContextMenu);
 
     loadState();
     updatePlayModeButton();
@@ -151,6 +160,7 @@ void MainWindow::on_actionImport_Playlist_triggered()
 
 void MainWindow::onPositionChanged(qint64 position)
 {
+    m_currentPosition = position;
     if (m_player->duration() > 0) {
         m_updatingProgressBar = true;
         int value = static_cast<int>(position * 100 / m_player->duration());
@@ -341,51 +351,46 @@ void MainWindow::onLyricsChanged(const QString &lyrics)
 {
     if (lyrics.isEmpty()) {
         ui->lyricsView->setText("歌词将显示在这里");
-    } else {
-        // 只显示当前歌词加上前后各2句，一行一句且居中，当前歌词字号放大一倍
-        QString lyricsHtml;
-        int currentIndex = -1;
-        
-        // 找到当前歌词的索引
-        for (int i = 0; i < m_lyricsList.size(); ++i) {
-            if (m_lyricsList[i].second == lyrics) {
-                currentIndex = i;
-                break;
-            }
-        }
-        
-        if (currentIndex != -1) {
-            // 计算显示的起始和结束索引
-            int startIndex = qMax(0, currentIndex - 2);
-            int endIndex = qMin(currentIndex + 2, static_cast<int>(m_lyricsList.size()) - 1);
-            
-            // 构建歌词HTML，使用表格布局实现上下左右居中
-            lyricsHtml = "<html><body style=\"margin: 0; padding: 0; height: 100%; display: table; width: 100%;\"><div style=\"display: table-cell; vertical-align: middle; text-align: center;\">";
-            for (int i = startIndex; i <= endIndex; ++i) {
-                if (i == currentIndex) {
-                    // 高亮当前歌词，字号放大一倍
-                    lyricsHtml += "<p style=\"font-size: 2em; color: red; margin: 10px 0;\">" + m_lyricsList[i].second + "</p>";
-                } else {
-                    lyricsHtml += "<p style=\"margin: 10px 0;\">" + m_lyricsList[i].second + "</p>";
-                }
-            }
-            lyricsHtml += "</div></body></html>";
-        } else {
-            // 如果找不到当前歌词，显示所有歌词
-            lyricsHtml = "<html><body style=\"margin: 0; padding: 0; height: 100%; display: table; width: 100%;\"><div style=\"display: table-cell; vertical-align: middle; text-align: center;\">";
-            for (const auto &lyric : m_lyricsList) {
-                if (lyric.second == lyrics) {
-                    // 高亮当前歌词，字号放大一倍
-                    lyricsHtml += "<p style=\"font-size: 2em; color: red; margin: 10px 0;\">" + lyric.second + "</p>";
-                } else {
-                    lyricsHtml += "<p style=\"margin: 10px 0;\">" + lyric.second + "</p>";
-                }
-            }
-            lyricsHtml += "</div></body></html>";
-        }
-        
-        ui->lyricsView->setHtml(lyricsHtml);
+        return;
     }
+
+    // 按当前播放时间定位歌词索引（m_lyricsList 来自 getAllLyrics()，按时间升序）。
+    // 不再按文本精确匹配——LRC 中重复行（同一句出现在多个时间点）会卡在首处，
+    // 按时间定位可命中当前播放段落对应的正确索引。
+    int currentIndex = -1;
+    for (int i = 0; i < m_lyricsList.size(); ++i) {
+        if (m_lyricsList[i].first <= m_currentPosition) {
+            currentIndex = i;
+        } else {
+            break; // 遇到未来时间戳即停（列表升序）
+        }
+    }
+
+    // 构建歌词HTML，使用表格布局实现上下左右居中
+    QString lyricsHtml = "<html><body style=\"margin: 0; padding: 0; height: 100%; display: table; width: 100%;\"><div style=\"display: table-cell; vertical-align: middle; text-align: center;\">";
+
+    if (currentIndex != -1) {
+        // 只显示当前歌词加上前后各2句，当前歌词字号放大一倍并高亮
+        int startIndex = qMax(0, currentIndex - 2);
+        int endIndex = qMin(currentIndex + 2, static_cast<int>(m_lyricsList.size()) - 1);
+        for (int i = startIndex; i <= endIndex; ++i) {
+            if (i == currentIndex) {
+                lyricsHtml += "<p style=\"font-size: 2em; color: red; margin: 10px 0; white-space: pre-wrap;\">" + m_lyricsList[i].second + "</p>";
+            } else {
+                lyricsHtml += "<p style=\"margin: 10px 0; white-space: pre-wrap;\">" + m_lyricsList[i].second + "</p>";
+            }
+        }
+    } else {
+        // 列表非空但无时间戳 <= 当前位置（理论上不应到达，兜底显示全部歌词）
+        for (const auto &lyric : m_lyricsList) {
+            lyricsHtml += "<p style=\"margin: 10px 0; white-space: pre-wrap;\">" + lyric.second + "</p>";
+        }
+    }
+    lyricsHtml += "</div></body></html>";
+
+    // white-space: pre-wrap 保留纯文本歌词（无时间戳的单条目）的换行，
+    // 避免 HTML 默认空白折叠把多行压成一段红字。
+    ui->lyricsView->setHtml(lyricsHtml);
 }
 
 void MainWindow::on_clearPlaylistButton_clicked()
@@ -407,6 +412,51 @@ void MainWindow::on_clearPlaylistButton_clicked()
     // 重置进度条
     ui->progressBar->setValue(0);
     ui->timeLabel->setText("0:00 / 0:00");
+}
+
+void MainWindow::onRemoveSelected()
+{
+    QItemSelectionModel *sel = ui->playlistView->selectionModel();
+    if (!sel) return;
+    QModelIndexList idxs = sel->selectedRows();
+    if (idxs.isEmpty()) return;
+
+    QList<int> rows;
+    for (const QModelIndex &i : idxs) rows << i.row();
+
+    // 先在 Player 上删除并处理当前索引/切歌，再在模型上删除刷新 UI。
+    // 两边各自维护 m_mediaList 副本，用同一组（删除前）行号删除，最终一致。
+    m_player->removeMediaRows(rows);
+    m_playlistModel->removeRowsAt(rows);
+
+    // 列表被删空时重置 UI（参考 on_clearPlaylistButton_clicked）
+    if (m_playlistModel->mediaList().isEmpty()) {
+        ui->lyricsView->setText("歌词将显示在这里");
+        m_lyricsList.clear();
+        ui->currentSongLabel->setText("当前播放: 无");
+        ui->progressBar->setValue(0);
+        ui->timeLabel->setText("0:00 / 0:00");
+    }
+}
+
+void MainWindow::onPlaylistContextMenu(const QPoint &pos)
+{
+    QItemSelectionModel *sel = ui->playlistView->selectionModel();
+    QModelIndex idx = ui->playlistView->indexAt(pos);
+    // 右键在未选中的有效行上：单选该行，使"删除选中"作用于右键所在行
+    if (idx.isValid() && sel && !sel->isSelected(idx)) {
+        sel->clearSelection();
+        sel->select(idx, QItemSelectionModel::Select | QItemSelectionModel::Rows);
+    }
+    const bool hasSelection = sel && !sel->selectedRows().isEmpty();
+    if (!idx.isValid() && !hasSelection) return; // 空白处且无选中不弹菜单
+
+    QMenu menu(this);
+    QAction *delAct = menu.addAction("删除选中");
+    delAct->setEnabled(hasSelection);
+
+    QAction *chosen = menu.exec(ui->playlistView->viewport()->mapToGlobal(pos));
+    if (chosen == delAct) onRemoveSelected();
 }
 
 void MainWindow::on_equalizerButton_clicked()

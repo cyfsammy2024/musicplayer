@@ -1,5 +1,6 @@
 #include "player.h"
 #include <QRandomGenerator>
+#include <algorithm>
 
 Player::Player(QObject *parent) : QObject(parent),
     m_player(new QMediaPlayer(this)),
@@ -35,6 +36,50 @@ void Player::setMediaList(const QList<QUrl> &mediaList)
 QList<QUrl> Player::mediaList() const
 {
     return m_mediaList;
+}
+
+void Player::removeMediaRows(const QList<int> &rows)
+{
+    if (rows.isEmpty() || m_mediaList.isEmpty()) return;
+
+    // 去重降序：从后往前删
+    QList<int> sorted = rows;
+    std::sort(sorted.begin(), sorted.end(), std::greater<int>());
+    sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
+    const int n = m_mediaList.size();
+    for (int r : sorted) {
+        if (r < 0 || r >= n) return; // 范围非法整体放弃
+    }
+
+    const int oldCur = m_currentIndex;
+    const bool curRemoved = sorted.contains(oldCur);
+    // < oldCur 的删除数：用于把当前索引平移到删除后的新位置
+    int removedBefore = 0;
+    for (int r : sorted) {
+        if (r < oldCur) ++removedBefore;
+    }
+
+    for (int r : sorted) m_mediaList.removeAt(r);
+
+    const int newSize = m_mediaList.size();
+    int newCur = oldCur - removedBefore;
+    if (newCur < 0) newCur = -1;
+    else if (newCur >= newSize) newCur = newSize - 1; // 删到末尾越界，回退到末项
+    m_currentIndex = newCur;
+
+    if (curRemoved) {
+        // 删除的是当前播放项：切到"下一首"（已位于 newCur 位置）并继续播放
+        if (newCur >= 0) {
+            m_player->setSource(m_mediaList[newCur]);
+            m_lyricsManager->loadLyricsFromMedia(m_mediaList[newCur]);
+            m_player->play();
+        } else {
+            // 列表被删空
+            m_player->stop();
+        }
+    }
+    // 未删当前项：source 未变，仅索引调整（不打断播放），刷新选中行
+    emit currentIndexChanged(m_currentIndex);
 }
 
 void Player::play()

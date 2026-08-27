@@ -79,7 +79,11 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "onCurrentIndexChanged",
         "onEqualizerSettingsChanged",
         "QList<int>",
-        "settings"
+        "settings",
+        "onPlaylistContextMenu",
+        "QPoint",
+        "pos",
+        "onRemoveSelected"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -153,6 +157,12 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void(const QList<int> &)>(37, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { 0x80000000 | 38, 39 },
         }}),
+        // Slot 'onPlaylistContextMenu'
+        QtMocHelpers::SlotData<void(const QPoint &)>(40, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 41, 42 },
+        }}),
+        // Slot 'onRemoveSelected'
+        QtMocHelpers::SlotData<void()>(43, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -200,6 +210,8 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 21: _t->onAllLyricsChanged((*reinterpret_cast<std::add_pointer_t<QList<std::pair<qint64,QString>>>>(_a[1]))); break;
         case 22: _t->onCurrentIndexChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
         case 23: _t->onEqualizerSettingsChanged((*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[1]))); break;
+        case 24: _t->onPlaylistContextMenu((*reinterpret_cast<std::add_pointer_t<QPoint>>(_a[1]))); break;
+        case 25: _t->onRemoveSelected(); break;
         default: ;
         }
     }
@@ -236,14 +248,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 24)
+        if (_id < 26)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 24;
+        _id -= 26;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 24)
+        if (_id < 26)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 24;
+        _id -= 26;
     }
     return _id;
 }

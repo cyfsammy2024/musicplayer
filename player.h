@@ -18,6 +18,8 @@ public:
 
     void setMediaList(const QList<QUrl> &mediaList);
     QList<QUrl> mediaList() const;
+    // 删除指定行（基于删除前索引），自动调整当前索引；删除当前播放项时切到下一首并继续播放
+    void removeMediaRows(const QList<int> &rows);
 
     void play();
     void pause();
