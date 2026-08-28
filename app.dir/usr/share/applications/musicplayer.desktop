@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=MusicPlayer
+Name[zh_CN]=音乐播放器
+Comment=A Qt-based desktop music player
+Comment[zh_CN]=基于 Qt6 的桌面音乐播放器
+Exec=/usr/bin/musicplayer
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=music;player;音乐;歌词;
+StartupNotify=true

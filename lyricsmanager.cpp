@@ -9,7 +9,21 @@
 #include <QStringDecoder>
 #include <QIODevice>
 #include <QVector>
+
+// 编码转换的平台选择：Windows CRT 不含 iconv，改用系统 API；
+// 其余平台（Linux/macOS）使用 iconv。
+#if defined(Q_OS_WIN)
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+#include <string>
+#else
 #include <iconv.h>
+#endif
 
 // ============================================================
 // 匿名命名空间：二进制解析辅助函数（不进头文件）
@@ -82,7 +96,53 @@ bool isValidUtf8(const QByteArray &data) {
 }
 
 // 将 GBK（兼容 GB2312）字节流转为 UTF-8 字节流；失败返回空。
-// 使用 iconv（glibc 内置，无需额外链接），修复 GBK 编码 .lrc 既不处理的问题。
+// 各平台策略：Linux 由 glibc 内置 iconv（无需额外链接）；macOS 需链接 libiconv；
+// Windows 走系统 API（见下方 convertViaWinCodePage）。修复 GBK 编码 .lrc 既不处理的问题。
+
+#if defined(Q_OS_WIN)
+
+// Windows 实现：经 UTF-16 中转完成 指定代码页 -> UTF-8 转换。
+// MB_ERR_INVALID_CHARS 使非法输入字节直接失败，与 iconv 的严格失败语义一致。
+// codePage：54936 = GB18030，936 = GBK。
+QByteArray convertViaWinCodePage(const char *data, int size, UINT codePage) {
+    if (!data || size <= 0) return QByteArray();
+
+    // 第一步：源字节流解码为 UTF-16（两次调用：先求长度，再实际转换）
+    int wideLen = ::MultiByteToWideChar(codePage, MB_ERR_INVALID_CHARS,
+                                        data, size, nullptr, 0);
+    if (wideLen <= 0) return QByteArray();
+    std::wstring wide(static_cast<size_t>(wideLen), L'\0');
+    wideLen = ::MultiByteToWideChar(codePage, MB_ERR_INVALID_CHARS,
+                                    data, size, &wide[0], wideLen);
+    if (wideLen <= 0) return QByteArray();
+
+    // 第二步：UTF-16 编码为 UTF-8 输出
+    const int utf8Len = ::WideCharToMultiByte(CP_UTF8, 0,
+                                              wide.data(), wideLen,
+                                              nullptr, 0, nullptr, nullptr);
+    if (utf8Len <= 0) return QByteArray();
+    QByteArray out(utf8Len, Qt::Uninitialized);
+    if (::WideCharToMultiByte(CP_UTF8, 0,
+                              wide.data(), wideLen,
+                              out.data(), utf8Len, nullptr, nullptr) <= 0) {
+        return QByteArray();
+    }
+    return out;
+}
+
+QByteArray convertGbkToUtf8(const QByteArray &src) {
+    if (src.isEmpty()) return QByteArray();
+    // 先按更宽的 GB18030（代码页 54936）尝试，覆盖 GBK 及其扩展字符；
+    // 失败再按纯 GBK（代码页 936）解码。
+    QByteArray out = convertViaWinCodePage(src.constData(), src.size(), 54936);
+    if (out.isEmpty()) {
+        out = convertViaWinCodePage(src.constData(), src.size(), 936);
+    }
+    return out;
+}
+
+#else
+
 QByteArray convertGbkToUtf8(const QByteArray &src) {
     iconv_t cd = iconv_open("UTF-8", "GBK");
     if (cd == reinterpret_cast<iconv_t>(-1)) {
@@ -102,6 +162,8 @@ QByteArray convertGbkToUtf8(const QByteArray &src) {
     out.resize(out.size() - static_cast<int>(outLeft));
     return out;
 }
+
+#endif
 
 // 按 ID3 编码字节解码文本（不依赖 QTextCodec，使用 Qt6 Core 的 QStringDecoder）
 QString decodeText(quint8 enc, const QByteArray &raw) {

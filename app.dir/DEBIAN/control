@@ -1,0 +1,12 @@
+Package: musicplayer
+Version: 1.0.0
+Section: sound
+Priority: optional
+Architecture: amd64
+Maintainer: cyfsammy <cyfsammy@163.com>
+Depends: libqt6core6t64, libqt6gui6, libqt6widgets6, libqt6network6, libqt6multimedia6, libqt6multimediawidgets6
+Homepage: https://github.com/cyfsammy2024/musicplayer
+Description: 基于 Qt6 的桌面音乐播放器
+ 面向 Linux 的桌面音乐播放器：支持内嵌歌词解析（MP3 ID3v2、FLAC/OGG、M4A、WAV）、
+ 外部 .lrc 歌词、均衡器、多种播放模式与播放列表管理。
+

@@ -473,7 +473,7 @@ void MainWindow::on_actionCheck_Update_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     QMessageBox::about(this, "关于",
-        "音乐播放器 1.0\n\n"
+        "音乐播放器 " APP_VERSION "\n\n"
         "基于 Qt6 (C++) 的桌面音乐播放器\n"
         "支持格式：MP3 / WAV / FLAC / OGG / M4A\n\n"
         "功能：内嵌歌词解析、播放列表管理、均衡器、播放模式切换");
