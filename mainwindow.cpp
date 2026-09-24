@@ -511,7 +511,7 @@ void MainWindow::onPlaylistContextMenu(const QPoint &pos)
         if (row >= 0 && row < list.size()) {
             QString path = list.at(row).toLocalFile();
             if (!path.isEmpty()) {
-                on_actionEditTags_triggered_forPath(path);
+                on_actionEditTags_triggered_forPath(path, false);
             }
         }
     }
@@ -587,7 +587,7 @@ void MainWindow::on_actionEditTags_triggered()
                               : m_playlistModel->mediaList().at(m_player->currentIndex()).toLocalFile());
 }
 
-void MainWindow::on_actionEditTags_triggered_forPath(const QString &path)
+void MainWindow::on_actionEditTags_triggered_forPath(const QString &path, bool toggle)
 {
     if (path.isEmpty()) {
         QMessageBox::warning(this, QStringLiteral("标签编辑"),
@@ -608,15 +608,13 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path)
     }
     m_tagEditorWindow->reload(path);
 
-    if (m_tagEditorDock->isVisible()) {
+    if (toggle && m_tagEditorDock->isVisible()) {
         m_tagEditorDock->hide();
         if (m_sizeBeforeTagEditor.isValid()) {
             QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeTagEditor); });
         }
-    } else {
-        if (!m_tagEditorDock->isFloating()) {
-            m_sizeBeforeTagEditor = size();
-        }
+    } else if (!m_tagEditorDock->isFloating()) {
+        m_sizeBeforeTagEditor = size();
         m_tagEditorDock->show();
         m_tagEditorDock->raise();
         m_tagEditorDock->activateWindow();

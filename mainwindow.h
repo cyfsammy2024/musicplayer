@@ -40,7 +40,7 @@ private slots:
     void on_actionEqualizer_triggered();
     void on_actionLyrics_triggered();
     void on_actionEditTags_triggered();
-    void on_actionEditTags_triggered_forPath(const QString &path);
+    void on_actionEditTags_triggered_forPath(const QString &path, bool toggle = true);
 
     void onPositionChanged(qint64 position);
     void onDurationChanged(qint64 duration);
