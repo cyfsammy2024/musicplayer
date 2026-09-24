@@ -88,9 +88,6 @@ void TagEditorWindow::loadFromDisk()
         m_trackSpin->setEnabled(false);
         m_genreEdit->setEnabled(false);
         m_lyricsEdit->setEnabled(false);
-        QMessageBox::information(this, QStringLiteral("提示"),
-                                 QStringLiteral("无法识别该文件格式，标签已清空。\n"
-                                                "支持的格式：MP3 / FLAC / OGG / M4A / WAV"));
     }
     m_titleEdit->setText(fields.title);
     m_artistEdit->setText(fields.artist);
