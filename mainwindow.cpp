@@ -459,9 +459,30 @@ void MainWindow::onPlaylistContextMenu(const QPoint &pos)
     QMenu menu(this);
     QAction *delAct = menu.addAction("删除选中");
     delAct->setEnabled(hasSelection);
+    menu.addSeparator();
+    QAction *editTagsAct = menu.addAction("编辑标签");
+    editTagsAct->setEnabled(idx.isValid());
 
     QAction *chosen = menu.exec(ui->playlistView->viewport()->mapToGlobal(pos));
     if (chosen == delAct) onRemoveSelected();
+    else if (chosen == editTagsAct && idx.isValid()) {
+        QList<QUrl> list = m_playlistModel->mediaList();
+        int row = idx.row();
+        if (row >= 0 && row < list.size()) {
+            QString path = list.at(row).toLocalFile();
+            if (!path.isEmpty()) {
+                TagEditorWindow dlg(path, this);
+                connect(&dlg, &TagEditorWindow::tagsSaved, this, [this](const QString &filePath) {
+                    int cur = m_player->currentIndex();
+                    if (cur >= 0 && cur < m_playlistModel->mediaList().size() &&
+                        m_playlistModel->mediaList().at(cur).toLocalFile() == filePath) {
+                        m_player->lyricsManager()->loadLyricsFromMedia(QUrl::fromLocalFile(filePath));
+                    }
+                });
+                dlg.exec();
+            }
+        }
+    }
 }
 
 void MainWindow::on_actionCheck_Update_triggered()
@@ -493,6 +514,30 @@ void MainWindow::on_actionLyrics_triggered()
     m_lyricsWindow->show();
     m_lyricsWindow->raise();
     m_lyricsWindow->activateWindow();
+}
+
+void MainWindow::on_actionEditTags_triggered()
+{
+    QList<QUrl> list = m_playlistModel->mediaList();
+    int idx = m_player->currentIndex();
+    if (list.isEmpty() || idx < 0 || idx >= list.size()) {
+        QMessageBox::warning(this, QStringLiteral("标签编辑"),
+                             QStringLiteral("播放列表为空，没有可编辑的曲目。"));
+        return;
+    }
+    QString path = list.at(idx).toLocalFile();
+    if (path.isEmpty()) return;
+    TagEditorWindow dlg(path, this);
+    connect(&dlg, &TagEditorWindow::tagsSaved, this, [this](const QString &filePath) {
+        // 若编辑的是当前播放曲目，重新加载其内嵌歌词以反映变更
+        int cur = m_player->currentIndex();
+        if (cur >= 0 && cur < m_playlistModel->mediaList().size()) {
+            if (m_playlistModel->mediaList().at(cur).toLocalFile() == filePath) {
+                m_player->lyricsManager()->loadLyricsFromMedia(QUrl::fromLocalFile(filePath));
+            }
+        }
+    });
+    dlg.exec();
 }
 
 void MainWindow::onEqualizerSettingsChanged(const QList<int> &settings)

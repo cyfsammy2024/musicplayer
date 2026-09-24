@@ -189,6 +189,7 @@
     </property>
     <addaction name="actionEqualizer"/>
     <addaction name="actionLyrics"/>
+    <addaction name="actionEditTags"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -229,6 +230,11 @@
   <action name="actionLyrics">
    <property name="text">
     <string>歌词</string>
+   </property>
+  </action>
+  <action name="actionEditTags">
+   <property name="text">
+    <string>标签编辑</string>
    </property>
   </action>
   <action name="actionCheck_Update">

@@ -1,4 +1,5 @@
 #include "lyricsmanager.h"
+#include "tagutils.h"
 #include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
@@ -6,7 +7,6 @@
 #include <QByteArray>
 #include <QSet>
 #include <QStringConverter>
-#include <QStringDecoder>
 #include <QIODevice>
 #include <QVector>
 
@@ -26,43 +26,13 @@
 #endif
 
 // ============================================================
-// 匿名命名空间：二进制解析辅助函数（不进头文件）
+// 匿名命名空间：仅保留 lyrics 专用解析函数。
+// 通用二进制读写辅助（readBE32 / decodeText / readId3v2Tag 等）已迁移至
+// TagUtils 命名空间（tagutils.h/.cpp），读写两侧共用。
 // ============================================================
 namespace {
 
-// 大端 32 位（普通 BE，非 syncsafe）
-inline quint32 readBE32(uchar b0, uchar b1, uchar b2, uchar b3) {
-    return (quint32(b0) << 24) | (quint32(b1) << 16) | (quint32(b2) << 8) | quint32(b3);
-}
-// 小端 32 位
-inline quint32 readLE32(uchar b0, uchar b1, uchar b2, uchar b3) {
-    return (quint32(b3) << 24) | (quint32(b2) << 16) | (quint32(b1) << 8) | quint32(b0);
-}
-// 24 位 BE
-inline quint32 readBE24(uchar b0, uchar b1, uchar b2) {
-    return (quint32(b0) << 16) | (quint32(b1) << 8) | quint32(b2);
-}
-// syncsafe 32 位（ID3v2 size 字段：每字节仅低 7 位有效）
-inline quint32 readSyncsafe(uchar b0, uchar b1, uchar b2, uchar b3) {
-    return (quint32(b0 & 0x7f) << 21) | (quint32(b1 & 0x7f) << 14)
-         | (quint32(b2 & 0x7f) << 7) | quint32(b3 & 0x7f);
-}
-
-// 去 unsynchronisation：把 0xFF 0x00 还原为 0xFF（在解码文本前应用）
-QByteArray deUnsynchronise(const QByteArray &in) {
-    QByteArray out;
-    out.reserve(in.size());
-    const int n = in.size();
-    for (int i = 0; i < n; ++i) {
-        uchar c = uchar(in[i]);
-        out.append(char(c));
-        // 跳过紧跟 0xFF 的填充 0x00
-        if (c == 0xFF && i + 1 < n && uchar(in[i + 1]) == 0x00) {
-            ++i;
-        }
-    }
-    return out;
-}
+using namespace TagUtils;
 
 // 严格字节级 UTF-8 校验（用于判断 .lrc 文件编码）。
 // 注意：Qt6 的 QStringDecoder(Utf8) 默认是 lenient 模式，会把非法字节替换为
@@ -165,86 +135,10 @@ QByteArray convertGbkToUtf8(const QByteArray &src) {
 
 #endif
 
-// 按 ID3 编码字节解码文本（不依赖 QTextCodec，使用 Qt6 Core 的 QStringDecoder）
-QString decodeText(quint8 enc, const QByteArray &raw) {
-    if (raw.isEmpty()) return QString();
-    switch (enc) {
-    case 0: // ISO-8859-1
-        return QString::fromLatin1(raw);
-    case 3: // UTF-8
-        return QString::fromUtf8(raw);
-    case 1: { // UTF-16 with BOM
-        if (raw.size() >= 2 && uchar(raw[0]) == 0xFE && uchar(raw[1]) == 0xFF) {
-            QStringDecoder dec(QStringConverter::Utf16BE);
-            return dec.decode(raw.mid(2));
-        } else if (raw.size() >= 2 && uchar(raw[0]) == 0xFF && uchar(raw[1]) == 0xFE) {
-            QStringDecoder dec(QStringConverter::Utf16LE);
-            return dec.decode(raw.mid(2));
-        }
-        // 无 BOM，按 LE 回退
-        QStringDecoder dec(QStringConverter::Utf16LE);
-        return dec.decode(raw);
-    }
-    case 2: { // UTF-16BE 无 BOM
-        QStringDecoder dec(QStringConverter::Utf16BE);
-        return dec.decode(raw);
-    }
-    default:
-        return QString::fromUtf8(raw);
-    }
-}
-
-// 跳过描述符终结符，返回第一个不属于描述符的字节偏移
-// USLT/SYLT 结构：[enc][lang(3)][descriptor 按 enc 终结][lyrics...]
-int skipDescriptor(const QByteArray &frame, int start, quint8 enc) {
-    const int n = frame.size();
-    if (enc == 1 || enc == 2) {
-        // UTF-16：2 字节终结
-        for (int i = start; i + 1 < n; i += 2) {
-            if (uchar(frame[i]) == 0x00 && uchar(frame[i + 1]) == 0x00) {
-                return i + 2;
-            }
-        }
-    } else {
-        // ISO-8859-1 / UTF-8：1 字节终结
-        for (int i = start; i < n; ++i) {
-            if (uchar(frame[i]) == 0x00) {
-                return i + 1;
-            }
-        }
-    }
-    return n;
-}
-
 // LRC 时间戳探测/解析用的 regex（与既有实现保持一致）
 const QRegularExpression &lrcTimeRegex() {
     static const QRegularExpression re(QStringLiteral("\\[(\\d+):(\\d+)(\\.\\d+)?\\]"));
     return re;
-}
-
-// 判断字节串是否可作为合法帧 ID（A-Z0-9）
-bool isFrameId(const QByteArray &id) {
-    if (id.isEmpty()) return false;
-    for (int i = 0; i < id.size(); ++i) {
-        uchar c = uchar(id[i]);
-        bool ok = (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9');
-        if (!ok) return false;
-    }
-    return true;
-}
-
-// 从已打开的 QIODevice 当前位置读取完整 ID3v2 标签（header+frames），不含音频数据
-QByteArray readId3v2Tag(QIODevice &dev) {
-    QByteArray header = dev.read(10);
-    if (header.size() < 10 || header[0] != 'I' || header[1] != 'D' || header[2] != '3') {
-        return QByteArray();
-    }
-    quint32 size = readSyncsafe(uchar(header[6]), uchar(header[7]), uchar(header[8]), uchar(header[9]));
-    if (size == 0) return QByteArray();
-    QByteArray frames = dev.read(size);
-    QByteArray tag = header;
-    tag += frames;
-    return tag;
 }
 
 // 解析 USLT 帧体
@@ -336,41 +230,22 @@ QString parseSyltBody(const QByteArray &body) {
     return lrc;
 }
 
-// 解析 Vorbis 注释块（FLAC 与 OGG 共用），返回歌词文本
+// 解析 Vorbis 注释块（FLAC 与 OGG 共用），返回歌词文本。
+// 通用字段解析已迁移至 TagUtils::parseVorbisCommentFields；此处按歌词键优先级挑选。
 QString parseVorbisComments(const QByteArray &data) {
-    if (data.size() < 4) return QString();
-    int pos = 0;
-    quint32 vendorLen = readLE32(uchar(data[0]), uchar(data[1]), uchar(data[2]), uchar(data[3]));
-    pos += 4;
-    if (pos + vendorLen > data.size()) return QString();
-    pos += int(vendorLen);
-    if (pos + 4 > data.size()) return QString();
-    quint32 count = readLE32(uchar(data[pos]), uchar(data[pos + 1]),
-                             uchar(data[pos + 2]), uchar(data[pos + 3]));
-    pos += 4;
-
-    QString best;
-    for (quint32 i = 0; i < count; ++i) {
-        if (pos + 4 > data.size()) break;
-        quint32 len = readLE32(uchar(data[pos]), uchar(data[pos + 1]),
-                               uchar(data[pos + 2]), uchar(data[pos + 3]));
-        pos += 4;
-        if (pos + len > data.size()) break;
-        QByteArray field = data.mid(pos, int(len));
-        pos += int(len);
-        int eq = field.indexOf('=');
-        if (eq <= 0) continue;
-        QByteArray key = field.left(eq).toUpper();
-        QByteArray val = field.mid(eq + 1);
-        if (key == "SYNCEDLYRICS") {
-            QString text = QString::fromUtf8(val);
-            if (!text.isEmpty()) return text; // 带时间戳优先
-        } else if (key == "LYRICS" || key == "UNSYNCEDLYRICS" || key == "LYRIC") {
-            QString text = QString::fromUtf8(val);
-            if (!text.isEmpty() && best.isEmpty()) best = text;
+    const QMap<QString, QString> fields = parseVorbisCommentFields(data);
+    if (fields.isEmpty()) return QString();
+    // 带时间戳优先
+    if (fields.contains("SYNCEDLYRICS") && !fields.value("SYNCEDLYRICS").isEmpty()) {
+        return fields.value("SYNCEDLYRICS");
+    }
+    static const QVector<QString> keys = {"LYRICS", "UNSYNCEDLYRICS", "LYRIC"};
+    for (const QString &k : keys) {
+        if (fields.contains(k) && !fields.value(k).isEmpty()) {
+            return fields.value(k);
         }
     }
-    return best;
+    return QString();
 }
 
 // 递归遍历 MP4 atom 树寻找 ©lyr

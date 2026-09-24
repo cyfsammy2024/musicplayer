@@ -9,7 +9,10 @@ SOURCES += main.cpp \
     player.cpp \
     lyricsmanager.cpp \
     equalizerwindow.cpp \
-    lyricswindow.cpp
+    lyricswindow.cpp \
+    tagutils.cpp \
+    tagmanager.cpp \
+    tageditorwindow.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -17,7 +20,10 @@ HEADERS += \
     player.h \
     lyricsmanager.h \
     equalizerwindow.h \
-    lyricswindow.h
+    lyricswindow.h \
+    tagutils.h \
+    tagmanager.h \
+    tageditorwindow.h
 
 FORMS += \
     mainwindow.ui

@@ -6,6 +6,7 @@
 #include "playlistmodel.h"
 #include "equalizerwindow.h"
 #include "lyricswindow.h"
+#include "tageditorwindow.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -37,6 +38,7 @@ private slots:
     void on_clearPlaylistButton_clicked();
     void on_actionEqualizer_triggered();
     void on_actionLyrics_triggered();
+    void on_actionEditTags_triggered();
 
     void onPositionChanged(qint64 position);
     void onDurationChanged(qint64 duration);
