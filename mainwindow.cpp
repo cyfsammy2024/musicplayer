@@ -549,15 +549,10 @@ void MainWindow::on_actionEqualizer_triggered()
         splitDockWidget(m_equalizerDock, m_tagEditorDock, Qt::Vertical);
         m_equalizerDock->hide();
     }
-    if (m_equalizerDock->isVisible()) {
+    const bool wasVisible = m_equalizerDock->isVisible();
+    if (wasVisible) {
         m_equalizerDock->hide();
-        if (m_sizeBeforeEqualizer.isValid()) {
-            QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeEqualizer); });
-        }
     } else {
-        if (!m_equalizerDock->isFloating()) {
-            m_sizeBeforeEqualizer = size();
-        }
         m_equalizerDock->show();
         m_equalizerDock->raise();
         m_equalizerDock->activateWindow();
@@ -566,15 +561,10 @@ void MainWindow::on_actionEqualizer_triggered()
 
 void MainWindow::on_actionLyrics_triggered()
 {
-    if (m_lyricsDock->isVisible()) {
+    const bool wasVisible = m_lyricsDock->isVisible();
+    if (wasVisible) {
         m_lyricsDock->hide();
-        if (m_sizeBeforeLyrics.isValid()) {
-            QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeLyrics); });
-        }
     } else {
-        if (!m_lyricsDock->isFloating()) {
-            m_sizeBeforeLyrics = size();
-        }
         m_lyricsDock->show();
         m_lyricsDock->raise();
         m_lyricsDock->activateWindow();
@@ -613,13 +603,7 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path, bool t
         // 菜单触发：切换显示/隐藏
         if (wasVisible) {
             m_tagEditorDock->hide();
-            if (m_sizeBeforeTagEditor.isValid()) {
-                QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeTagEditor); });
-            }
         } else {
-            if (!m_tagEditorDock->isFloating()) {
-                m_sizeBeforeTagEditor = size();
-            }
             m_tagEditorDock->show();
             m_tagEditorDock->raise();
             m_tagEditorDock->activateWindow();
@@ -627,9 +611,6 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path, bool t
     } else {
         // 右键触发：始终显示并提升到前台
         if (!m_tagEditorDock->isVisible()) {
-            if (!m_tagEditorDock->isFloating()) {
-                m_sizeBeforeTagEditor = size();
-            }
             m_tagEditorDock->show();
         }
         m_tagEditorDock->raise();

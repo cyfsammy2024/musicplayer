@@ -69,10 +69,7 @@ private:
     TagEditorWindow *m_tagEditorWindow;
     QDockWidget *m_equalizerDock;
     QDockWidget *m_lyricsDock;
-    QDockWidget *m_tagEditorDock; // 标签编辑器停靠容器，包含歌词/均衡器子面板
-    QSize m_sizeBeforeLyrics;   // 开启歌词面板前的主窗口尺寸，关闭后恢复
-    QSize m_sizeBeforeEqualizer; // 开启均衡器面板前的主窗口尺寸
-    QSize m_sizeBeforeTagEditor; // 开启标签编辑面板前的主窗口尺寸
+    QDockWidget *m_tagEditorDock; // 标签编辑器独立 dock，在右侧
 
     void updatePlayModeButton();
     void updateProgressBar();
