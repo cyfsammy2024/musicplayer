@@ -40,6 +40,7 @@ private slots:
     void on_actionEqualizer_triggered();
     void on_actionLyrics_triggered();
     void on_actionEditTags_triggered();
+    void on_actionEditTags_triggered_forPath(const QString &path);
 
     void onPositionChanged(qint64 position);
     void onDurationChanged(qint64 duration);
@@ -66,10 +67,13 @@ private:
     qint64 m_currentPosition = 0; // 当前播放位置（毫秒），用于按时间定位歌词索引
     EqualizerWindow *m_equalizerWindow;
     LyricsWindow *m_lyricsWindow;
+    TagEditorWindow *m_tagEditorWindow;
     QDockWidget *m_equalizerDock;
     QDockWidget *m_lyricsDock;
+    QDockWidget *m_tagEditorDock;
     QSize m_sizeBeforeLyrics;   // 开启歌词面板前的主窗口尺寸，关闭后恢复
     QSize m_sizeBeforeEqualizer; // 开启均衡器面板前的主窗口尺寸
+    QSize m_sizeBeforeTagEditor; // 开启标签编辑器前的主窗口尺寸
 
     void updatePlayModeButton();
     void updateProgressBar();

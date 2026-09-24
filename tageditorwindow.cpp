@@ -6,17 +6,23 @@
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QPlainTextEdit>
-#include <QDialogButtonBox>
 #include <QPushButton>
+#include <QDockWidget>
 #include <QFileInfo>
 #include <QMessageBox>
 
 TagEditorWindow::TagEditorWindow(const QString &filePath, QWidget *parent)
-    : QDialog(parent), m_filePath(filePath)
+    : QWidget(parent), m_filePath(filePath)
 {
     setWindowTitle(QStringLiteral("标签编辑"));
     setMinimumSize(480, 420);
     setupUI();
+    loadFromDisk();
+}
+
+void TagEditorWindow::reload(const QString &filePath)
+{
+    m_filePath = filePath;
     loadFromDisk();
 }
 
@@ -52,11 +58,19 @@ void TagEditorWindow::setupUI()
     form->addRow(QStringLiteral("歌词:"), m_lyricsEdit);
     main->addLayout(form);
 
-    auto *buttons = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel,
-                                         Qt::Horizontal, this);
-    connect(buttons, &QDialogButtonBox::accepted, this, &TagEditorWindow::onSave);
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-    main->addWidget(buttons);
+    auto *hLayout = new QHBoxLayout();
+    auto *saveBtn = new QPushButton(QStringLiteral("保存"), this);
+    auto *cancelBtn = new QPushButton(QStringLiteral("取消"), this);
+    hLayout->addStretch();
+    hLayout->addWidget(saveBtn);
+    hLayout->addWidget(cancelBtn);
+    main->addLayout(hLayout);
+
+    connect(saveBtn, &QPushButton::clicked, this, &TagEditorWindow::onSave);
+    connect(cancelBtn, &QPushButton::clicked, this, [this](){
+        if (auto *dock = qobject_cast<QDockWidget *>(parentWidget()))
+            dock->hide();
+    });
 }
 
 void TagEditorWindow::loadFromDisk()
@@ -100,5 +114,4 @@ void TagEditorWindow::onSave()
     QMessageBox::information(this, QStringLiteral("已保存"),
                              QStringLiteral("标签已写入。"));
     emit tagsSaved(m_filePath);
-    accept();
 }

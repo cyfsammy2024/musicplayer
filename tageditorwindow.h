@@ -4,7 +4,7 @@
 // 标签编辑器对话框。构造时加载指定文件的标签到表单，保存时写回。
 // 保存成功后发出 tagsSaved 信号，主窗口据此刷新当前播放曲目的歌词显示。
 
-#include <QDialog>
+#include <QWidget>
 #include <QString>
 #include "tagmanager.h"
 
@@ -12,12 +12,14 @@ class QLineEdit;
 class QSpinBox;
 class QPlainTextEdit;
 class QLabel;
+class QPushButton;
 
-class TagEditorWindow : public QDialog
+class TagEditorWindow : public QWidget
 {
     Q_OBJECT
 public:
     explicit TagEditorWindow(const QString &filePath, QWidget *parent = nullptr);
+    void reload(const QString &filePath);
 
 signals:
     // 保存成功后发射，参数为被编辑的文件路径

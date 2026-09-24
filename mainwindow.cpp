@@ -21,8 +21,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_lyricsList(),
     m_equalizerWindow(nullptr),
     m_lyricsWindow(nullptr),
+    m_tagEditorWindow(nullptr),
     m_equalizerDock(nullptr),
-    m_lyricsDock(nullptr)
+    m_lyricsDock(nullptr),
+    m_tagEditorDock(nullptr)
 {
     ui->setupUi(this);
 
@@ -505,15 +507,7 @@ void MainWindow::onPlaylistContextMenu(const QPoint &pos)
         if (row >= 0 && row < list.size()) {
             QString path = list.at(row).toLocalFile();
             if (!path.isEmpty()) {
-                TagEditorWindow dlg(path, this);
-                connect(&dlg, &TagEditorWindow::tagsSaved, this, [this](const QString &filePath) {
-                    int cur = m_player->currentIndex();
-                    if (cur >= 0 && cur < m_playlistModel->mediaList().size() &&
-                        m_playlistModel->mediaList().at(cur).toLocalFile() == filePath) {
-                        m_player->lyricsManager()->loadLyricsFromMedia(QUrl::fromLocalFile(filePath));
-                    }
-                });
-                dlg.exec();
+                on_actionEditTags_triggered_forPath(path);
             }
         }
     }
@@ -592,26 +586,66 @@ void MainWindow::on_actionLyrics_triggered()
 
 void MainWindow::on_actionEditTags_triggered()
 {
-    QList<QUrl> list = m_playlistModel->mediaList();
-    int idx = m_player->currentIndex();
-    if (list.isEmpty() || idx < 0 || idx >= list.size()) {
+    on_actionEditTags_triggered_forPath(m_playlistModel->mediaList().isEmpty() ? QString()
+                              : m_playlistModel->mediaList().at(m_player->currentIndex()).toLocalFile());
+}
+
+void MainWindow::on_actionEditTags_triggered_forPath(const QString &path)
+{
+    if (path.isEmpty()) {
         QMessageBox::warning(this, QStringLiteral("标签编辑"),
                              QStringLiteral("播放列表为空，没有可编辑的曲目。"));
         return;
     }
-    QString path = list.at(idx).toLocalFile();
-    if (path.isEmpty()) return;
-    TagEditorWindow dlg(path, this);
-    connect(&dlg, &TagEditorWindow::tagsSaved, this, [this](const QString &filePath) {
-        // 若编辑的是当前播放曲目，重新加载其内嵌歌词以反映变更
-        int cur = m_player->currentIndex();
-        if (cur >= 0 && cur < m_playlistModel->mediaList().size()) {
-            if (m_playlistModel->mediaList().at(cur).toLocalFile() == filePath) {
-                m_player->lyricsManager()->loadLyricsFromMedia(QUrl::fromLocalFile(filePath));
-            }
+    // 懒创建 dock
+    if (!m_tagEditorWindow) {
+        m_tagEditorWindow = new TagEditorWindow(QString(), this);
+        connect(m_tagEditorWindow, &TagEditorWindow::tagsSaved, this,
+                [this](const QString &filePath) {
+                    int cur = m_player->currentIndex();
+                    if (cur >= 0 && cur < m_playlistModel->mediaList().size() &&
+                        m_playlistModel->mediaList().at(cur).toLocalFile() == filePath) {
+                        m_player->lyricsManager()->loadLyricsFromMedia(QUrl::fromLocalFile(filePath));
+                    }
+                });
+
+        m_tagEditorDock = new QDockWidget(QStringLiteral("标签编辑"), this);
+        m_tagEditorDock->setObjectName("TagEditorDock");
+        m_tagEditorDock->setWidget(m_tagEditorWindow);
+        m_tagEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
+                                         Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+        m_tagEditorDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                     QDockWidget::DockWidgetFloatable |
+                                     QDockWidget::DockWidgetClosable);
+        splitDockWidget(m_equalizerDock, m_tagEditorDock, Qt::Vertical);
+        m_tagEditorDock->hide();
+        connect(m_tagEditorDock, &QDockWidget::visibilityChanged, this,
+                [this](bool visible) {
+                    if (!visible && m_sizeBeforeTagEditor.isValid()) {
+                        QSize saved = m_sizeBeforeTagEditor;
+                        m_sizeBeforeTagEditor = QSize();
+                        QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+                    }
+                });
+    }
+
+    m_tagEditorWindow->reload(path);
+
+    if (m_tagEditorDock->isVisible()) {
+        m_tagEditorDock->hide();
+        if (m_sizeBeforeTagEditor.isValid()) {
+            QSize saved = m_sizeBeforeTagEditor;
+            m_sizeBeforeTagEditor = QSize();
+            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
         }
-    });
-    dlg.exec();
+    } else {
+        if (!m_tagEditorDock->isFloating()) {
+            m_sizeBeforeTagEditor = size();
+        }
+        m_tagEditorDock->show();
+        m_tagEditorDock->raise();
+        m_tagEditorDock->activateWindow();
+    }
 }
 
 void MainWindow::onEqualizerSettingsChanged(const QList<int> &settings)
