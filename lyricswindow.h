@@ -1,10 +1,10 @@
 #ifndef LYRICSWINDOW_H
 #define LYRICSWINDOW_H
 
-#include <QDialog>
+#include <QWidget>
 #include <QTextEdit>
 
-class LyricsWindow : public QDialog
+class LyricsWindow : public QWidget
 {
     Q_OBJECT
 public:

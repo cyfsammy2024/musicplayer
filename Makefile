@@ -627,7 +627,8 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o mainwindow.cpp
 
-playlistmodel.o: playlistmodel.cpp playlistmodel.h
+playlistmodel.o: playlistmodel.cpp playlistmodel.h \
+		tagutils.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o playlistmodel.o playlistmodel.cpp
 
 player.o: player.cpp player.h \

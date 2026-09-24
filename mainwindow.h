@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QDockWidget>
 #include "player.h"
 #include "playlistmodel.h"
 #include "equalizerwindow.h"
@@ -65,6 +66,10 @@ private:
     qint64 m_currentPosition = 0; // 当前播放位置（毫秒），用于按时间定位歌词索引
     EqualizerWindow *m_equalizerWindow;
     LyricsWindow *m_lyricsWindow;
+    QDockWidget *m_equalizerDock;
+    QDockWidget *m_lyricsDock;
+    QSize m_sizeBeforeLyrics;   // 开启歌词面板前的主窗口尺寸，关闭后恢复
+    QSize m_sizeBeforeEqualizer; // 开启均衡器面板前的主窗口尺寸
 
     void updatePlayModeButton();
     void updateProgressBar();

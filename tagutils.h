@@ -118,6 +118,11 @@ quint32 oggCrc32(const QByteArray &data);
 // 失败返回 false。end 为父 atom body 结束偏移（用于 size=0 时延伸到末尾）。
 bool parseMp4AtomHeader(QIODevice &dev, qint64 end, qint64 &headerLen, qint64 &atomSize, QByteArray &type);
 
+// -------- 时长解析（纯文件头，不依赖 QMediaPlayer）--------
+
+// 根据文件扩展名解析音频时长（毫秒）。失败返回 -1。
+qint64 getDurationMs(const QString &path);
+
 } // namespace TagUtils
 
 #endif // TAGUTILS_H

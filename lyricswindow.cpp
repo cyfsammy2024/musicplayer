@@ -1,7 +1,7 @@
 #include "lyricswindow.h"
 #include <QVBoxLayout>
 
-LyricsWindow::LyricsWindow(QWidget *parent) : QDialog(parent)
+LyricsWindow::LyricsWindow(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("歌词");
     resize(500, 600);

@@ -5,6 +5,7 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QList>
+#include <QHash>
 
 class PlaylistModel : public QAbstractTableModel
 {
@@ -30,7 +31,7 @@ public:
 
     void addMedia(const QList<QUrl> &urls);
     void clear();
-    void removeRowsAt(const QList<int> &rows); // 删除指定行（支持多行，自动降序去重）
+    void removeRowsAt(const QList<int> &rows);
     void importPlaylist(const QString &fileName);
     void exportPlaylist(const QString &fileName) const;
     void savePlaylist() const;
@@ -39,6 +40,8 @@ public:
 private:
     QList<QUrl> m_mediaList;
     QList<QFileInfo> m_fileInfos;
+    QHash<QString, qint64> m_durations; // 缓存：文件路径 → 毫秒
+
     QString formatDuration(qint64 duration) const;
     QString formatFileSize(qint64 size) const;
 };

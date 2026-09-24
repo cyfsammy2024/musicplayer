@@ -1,17 +1,20 @@
 #include "equalizerwindow.h"
 #include <QApplication>
+#include <QSettings>
 
-EqualizerWindow::EqualizerWindow(QWidget *parent) : QDialog(parent)
+EqualizerWindow::EqualizerWindow(QWidget *parent) : QWidget(parent)
 {
     setWindowTitle("均衡器");
     setMinimumSize(600, 300);
     setupUI();
     createFrequencyBands();
     loadPresets();
+    loadSettings();
 }
 
 EqualizerWindow::~EqualizerWindow()
 {
+    saveSettings();
 }
 
 void EqualizerWindow::setupUI()
@@ -96,8 +99,15 @@ void EqualizerWindow::onPresetChanged(int index)
 void EqualizerWindow::applyPreset(const QList<int> &preset)
 {
     if (preset.size() == m_bands.size()) {
+        // 阻塞信号：避免 setValue 触发 onSliderChanged 把预设重置为自定义
+        for (int i = 0; i < m_bands.size(); ++i) {
+            m_bands[i].slider->blockSignals(true);
+        }
         for (int i = 0; i < m_bands.size(); ++i) {
             m_bands[i].slider->setValue(preset[i]);
+        }
+        for (int i = 0; i < m_bands.size(); ++i) {
+            m_bands[i].slider->blockSignals(false);
         }
         emitSettingsChanged();
     }
@@ -123,4 +133,52 @@ QList<int> EqualizerWindow::getEqualizerSettings() const
 void EqualizerWindow::emitSettingsChanged()
 {
     emit equalizerSettingsChanged(getEqualizerSettings());
+}
+
+void EqualizerWindow::setEqualizerSettings(const QList<int> &settings)
+{
+    if (settings.size() != m_bands.size()) return;
+    for (int i = 0; i < m_bands.size(); ++i) {
+        m_bands[i].slider->setValue(settings[i]);
+    }
+}
+
+void EqualizerWindow::saveSettings() const
+{
+    QSettings settings("MusicPlayer", "MusicPlayer");
+    settings.beginWriteArray("equalizer");
+    for (int i = 0; i < m_bands.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue("value", m_bands[i].slider->value());
+    }
+    settings.endArray();
+    settings.setValue("equalizerPreset", m_presetComboBox->currentIndex());
+}
+
+void EqualizerWindow::loadSettings()
+{
+    QSettings settings("MusicPlayer", "MusicPlayer");
+    int size = settings.beginReadArray("equalizer");
+    if (size > 0) {
+        QList<int> values;
+        for (int i = 0; i < size && i < m_bands.size(); ++i) {
+            settings.setArrayIndex(i);
+            values.append(settings.value("value", 0).toInt());
+        }
+        // 先设置预设为自定义，避免 onSliderChanged 期间干扰
+        m_presetComboBox->blockSignals(true);
+        m_presetComboBox->setCurrentIndex(0);
+        m_presetComboBox->blockSignals(false);
+        for (int i = 0; i < values.size(); ++i) {
+            m_bands[i].slider->setValue(values[i]);
+        }
+    }
+    settings.endArray();
+    int preset = settings.value("equalizerPreset", 0).toInt();
+    if (preset > 0 && preset < m_presets.size()) {
+        m_presetComboBox->blockSignals(true);
+        m_presetComboBox->setCurrentIndex(preset);
+        m_presetComboBox->blockSignals(false);
+        applyPreset(m_presets[preset]);
+    }
 }

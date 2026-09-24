@@ -1,7 +1,7 @@
 #ifndef EQUALIZERWINDOW_H
 #define EQUALIZERWINDOW_H
 
-#include <QDialog>
+#include <QWidget>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QSlider>
@@ -9,15 +9,18 @@
 #include <QComboBox>
 #include <QGroupBox>
 
-class EqualizerWindow : public QDialog
+class EqualizerWindow : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit EqualizerWindow(QWidget *parent = nullptr);
     ~EqualizerWindow();
-    
+
     QList<int> getEqualizerSettings() const;
+    void setEqualizerSettings(const QList<int> &settings);
+    void saveSettings() const;
+    void loadSettings();
 
 signals:
     void equalizerSettingsChanged(const QList<int> &settings);

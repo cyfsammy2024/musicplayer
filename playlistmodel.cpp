@@ -4,6 +4,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <algorithm>
+#include "tagutils.h"
 
 PlaylistModel::PlaylistModel(QObject *parent) : QAbstractTableModel(parent)
 {
@@ -58,9 +59,13 @@ QVariant PlaylistModel::data(const QModelIndex &index, int role) const
             return row + 1;
         case FileName:
             return fileInfo.fileName();
-        case Duration:
-            // 这里需要获取媒体文件的时长，暂时返回空字符串
-            return "0:00";
+        case Duration: {
+            QString path = url.toLocalFile();
+            if (m_durations.contains(path)) {
+                return formatDuration(m_durations[path]);
+            }
+            return "--:--";
+        }
         case FileSize:
             return formatFileSize(fileInfo.size());
         default:
@@ -110,6 +115,12 @@ void PlaylistModel::addMedia(const QList<QUrl> &urls)
         for (int i = 0; i < newUrls.size(); ++i) {
             m_mediaList.append(newUrls[i]);
             m_fileInfos.append(newFileInfos[i]);
+            // 同步解析时长
+            QString path = newUrls[i].toLocalFile();
+            qint64 dur = TagUtils::getDurationMs(path);
+            if (dur > 0) {
+                m_durations[path] = dur;
+            }
         }
         endInsertRows();
     }
@@ -120,6 +131,7 @@ void PlaylistModel::clear()
     beginResetModel();
     m_mediaList.clear();
     m_fileInfos.clear();
+    m_durations.clear();
     endResetModel();
 }
 

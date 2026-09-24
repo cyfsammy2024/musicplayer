@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QDesktopServices>
 #include <QUrl>
+#include <QTimer>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -19,14 +20,38 @@ MainWindow::MainWindow(QWidget *parent) :
     m_updatingProgressBar(false),
     m_lyricsList(),
     m_equalizerWindow(nullptr),
-    m_lyricsWindow(nullptr)
+    m_lyricsWindow(nullptr),
+    m_equalizerDock(nullptr),
+    m_lyricsDock(nullptr)
 {
     ui->setupUi(this);
+
+    // 歌词窗口（停靠面板）
     m_lyricsWindow = new LyricsWindow(this);
+    m_lyricsDock = new QDockWidget(QStringLiteral("歌词"), this);
+    m_lyricsDock->setObjectName("LyricsDock");
+    m_lyricsDock->setWidget(m_lyricsWindow);
+    m_lyricsDock->setMinimumWidth(400);
+    m_lyricsDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
+                                  Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+    m_lyricsDock->setFeatures(QDockWidget::DockWidgetMovable |
+                              QDockWidget::DockWidgetFloatable |
+                              QDockWidget::DockWidgetClosable);
+    addDockWidget(Qt::RightDockWidgetArea, m_lyricsDock);
+    m_lyricsDock->hide(); // 默认隐藏，由菜单显示
+    // 用户通过 dock 自带关闭按钮隐藏时，也恢复主窗口尺寸
+    connect(m_lyricsDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        if (!visible && m_sizeBeforeLyrics.isValid()) {
+            QSize saved = m_sizeBeforeLyrics;
+            m_sizeBeforeLyrics = QSize();
+            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+        }
+    });
 
     m_player->setMediaList(m_playlistModel->mediaList());
 
     ui->playlistView->setModel(m_playlistModel);
+    ui->playlistView->verticalHeader()->hide(); // 隐藏自带行号列，使用模型中的序号列
     ui->playlistView->setColumnWidth(PlaylistModel::Number, 50);
     ui->playlistView->setColumnWidth(PlaylistModel::FileName, 400);
     ui->playlistView->setColumnWidth(PlaylistModel::Duration, 100);
@@ -302,6 +327,9 @@ void MainWindow::saveState()
     
     // 保存播放状态
     settings.setValue("playbackState", m_player->playbackState());
+
+    // 保存停靠窗口布局
+    settings.setValue("dockLayout", QMainWindow::saveState());
 }
 
 void MainWindow::loadState()
@@ -349,6 +377,12 @@ void MainWindow::loadState()
         m_player->play();
     } else if (playbackState == QMediaPlayer::PausedState) {
         m_player->pause();
+    }
+
+    // 恢复停靠窗口布局
+    QByteArray dockLayout = settings.value("dockLayout").toByteArray();
+    if (!dockLayout.isEmpty()) {
+        QMainWindow::restoreState(dockLayout);
     }
 }
 
@@ -505,15 +539,55 @@ void MainWindow::on_actionEqualizer_triggered()
     if (!m_equalizerWindow) {
         m_equalizerWindow = new EqualizerWindow(this);
         connect(m_equalizerWindow, &EqualizerWindow::equalizerSettingsChanged, this, &MainWindow::onEqualizerSettingsChanged);
+
+        m_equalizerDock = new QDockWidget(QStringLiteral("均衡器"), this);
+        m_equalizerDock->setObjectName("EqualizerDock");
+        m_equalizerDock->setWidget(m_equalizerWindow);
+        m_equalizerDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
+                                          Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
+        m_equalizerDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                      QDockWidget::DockWidgetFloatable |
+                                      QDockWidget::DockWidgetClosable);
+        // 均衡器停靠在歌词面板上方，成上下布局
+        splitDockWidget(m_lyricsDock, m_equalizerDock, Qt::Vertical);
+        m_equalizerDock->hide();
     }
-    m_equalizerWindow->show();
+    // 切换可见性：关闭时恢复主窗口尺寸，开启时保存当前尺寸
+    if (m_equalizerDock->isVisible()) {
+        m_equalizerDock->hide();
+        if (m_sizeBeforeEqualizer.isValid()) {
+            QSize saved = m_sizeBeforeEqualizer;
+            m_sizeBeforeEqualizer = QSize();
+            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+        }
+    } else {
+        if (!m_equalizerDock->isFloating()) {
+            m_sizeBeforeEqualizer = size();
+        }
+        m_equalizerDock->show();
+        m_equalizerDock->raise();
+        m_equalizerDock->activateWindow();
+    }
 }
 
 void MainWindow::on_actionLyrics_triggered()
 {
-    m_lyricsWindow->show();
-    m_lyricsWindow->raise();
-    m_lyricsWindow->activateWindow();
+    if (m_lyricsDock->isVisible()) {
+        m_lyricsDock->hide();
+        // 延迟恢复尺寸：等 dock 隐藏布局更新完成后再 resize
+        if (m_sizeBeforeLyrics.isValid()) {
+            QSize saved = m_sizeBeforeLyrics;
+            m_sizeBeforeLyrics = QSize();
+            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+        }
+    } else {
+        if (!m_lyricsDock->isFloating()) {
+            m_sizeBeforeLyrics = size();
+        }
+        m_lyricsDock->show();
+        m_lyricsDock->raise();
+        m_lyricsDock->activateWindow();
+    }
 }
 
 void MainWindow::on_actionEditTags_triggered()
