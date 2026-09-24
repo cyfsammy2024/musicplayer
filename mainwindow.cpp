@@ -608,22 +608,30 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path, bool t
     }
     m_tagEditorWindow->reload(path);
 
-    if (!m_tagEditorDock->isVisible()) {
-        if (!m_tagEditorDock->isFloating()) {
-            m_sizeBeforeTagEditor = size();
-        }
-        m_tagEditorDock->show();
-    }
+    const bool wasVisible = m_tagEditorDock->isVisible();
     if (toggle) {
-        // 菜单触发：若原本可见则关闭（toggle 行为）
-        if (!m_tagEditorDock->isFloating()) {
+        // 菜单触发：切换显示/隐藏
+        if (wasVisible) {
             m_tagEditorDock->hide();
             if (m_sizeBeforeTagEditor.isValid()) {
                 QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeTagEditor); });
             }
+        } else {
+            if (!m_tagEditorDock->isFloating()) {
+                m_sizeBeforeTagEditor = size();
+            }
+            m_tagEditorDock->show();
+            m_tagEditorDock->raise();
+            m_tagEditorDock->activateWindow();
         }
     } else {
         // 右键触发：始终显示并提升到前台
+        if (!m_tagEditorDock->isVisible()) {
+            if (!m_tagEditorDock->isFloating()) {
+                m_sizeBeforeTagEditor = size();
+            }
+            m_tagEditorDock->show();
+        }
         m_tagEditorDock->raise();
         m_tagEditorDock->activateWindow();
     }

@@ -80,15 +80,13 @@ void TagEditorWindow::loadFromDisk()
 
     TagFields fields;
     bool ok = TagManager::read(m_filePath, fields);
-    if (!ok) {
-        m_titleEdit->setEnabled(false);
-        m_artistEdit->setEnabled(false);
-        m_albumEdit->setEnabled(false);
-        m_yearSpin->setEnabled(false);
-        m_trackSpin->setEnabled(false);
-        m_genreEdit->setEnabled(false);
-        m_lyricsEdit->setEnabled(false);
-    }
+    m_titleEdit->setEnabled(ok);
+    m_artistEdit->setEnabled(ok);
+    m_albumEdit->setEnabled(ok);
+    m_yearSpin->setEnabled(ok);
+    m_trackSpin->setEnabled(ok);
+    m_genreEdit->setEnabled(ok);
+    m_lyricsEdit->setEnabled(ok);
     m_titleEdit->setText(fields.title);
     m_artistEdit->setText(fields.artist);
     m_albumEdit->setText(fields.album);
