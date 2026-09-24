@@ -28,19 +28,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    // 标签编辑器 dock（容器，停靠在右侧）
-    m_tagEditorDock = new QDockWidget(QStringLiteral("标签编辑"), this);
-    m_tagEditorDock->setObjectName("TagEditorDock");
-    m_tagEditorDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea |
-                                     Qt::BottomDockWidgetArea | Qt::TopDockWidgetArea);
-    m_tagEditorDock->setFeatures(QDockWidget::DockWidgetMovable |
-                                 QDockWidget::DockWidgetFloatable);
-    addDockWidget(Qt::RightDockWidgetArea, m_tagEditorDock);
-    m_tagEditorDock->hide(); // 默认隐藏
-
-    // 歌词 dock（作为标签编辑器容器的子面板）
+    // 三个独立 dock，从上到下依次排列在右侧
     m_lyricsWindow = new LyricsWindow(this);
-    m_lyricsDock = new QDockWidget(QStringLiteral("歌词"), m_tagEditorDock);
+    m_lyricsDock = new QDockWidget(QStringLiteral("歌词"), this);
     m_lyricsDock->setObjectName("LyricsDock");
     m_lyricsDock->setWidget(m_lyricsWindow);
     m_lyricsDock->setMinimumWidth(400);
@@ -48,6 +38,21 @@ MainWindow::MainWindow(QWidget *parent) :
                               QDockWidget::DockWidgetFloatable |
                               QDockWidget::DockWidgetClosable);
     m_lyricsDock->hide();
+
+    m_equalizerWindow = nullptr;
+    m_equalizerDock = nullptr;
+
+    m_tagEditorWindow = nullptr;
+    m_tagEditorDock = new QDockWidget(QStringLiteral("标签编辑"), this);
+    m_tagEditorDock->setObjectName("TagEditorDock");
+    m_tagEditorDock->setFeatures(QDockWidget::DockWidgetMovable |
+                                  QDockWidget::DockWidgetFloatable |
+                                  QDockWidget::DockWidgetClosable);
+    m_tagEditorDock->hide();
+
+    // 依次添加：歌词（上）、标签编辑器（下）
+    addDockWidget(Qt::RightDockWidgetArea, m_lyricsDock);
+    splitDockWidget(m_lyricsDock, m_tagEditorDock, Qt::Vertical);
 
     m_player->setMediaList(m_playlistModel->mediaList());
 
@@ -533,23 +538,21 @@ void MainWindow::on_actionEqualizer_triggered()
         m_equalizerWindow = new EqualizerWindow(this);
         connect(m_equalizerWindow, &EqualizerWindow::equalizerSettingsChanged, this, &MainWindow::onEqualizerSettingsChanged);
 
-        m_equalizerDock = new QDockWidget(QStringLiteral("均衡器"), m_tagEditorDock);
+        m_equalizerDock = new QDockWidget(QStringLiteral("均衡器"), this);
         m_equalizerDock->setObjectName("EqualizerDock");
         m_equalizerDock->setWidget(m_equalizerWindow);
         m_equalizerDock->setFeatures(QDockWidget::DockWidgetMovable |
                                      QDockWidget::DockWidgetFloatable |
                                      QDockWidget::DockWidgetClosable);
-        // 均衡器在歌词下方，上下排列
+        // 均衡器在歌词下方、标签编辑器上方
         splitDockWidget(m_lyricsDock, m_equalizerDock, Qt::Vertical);
+        splitDockWidget(m_equalizerDock, m_tagEditorDock, Qt::Vertical);
         m_equalizerDock->hide();
     }
-    // 切换可见性
     if (m_equalizerDock->isVisible()) {
         m_equalizerDock->hide();
         if (m_sizeBeforeEqualizer.isValid()) {
-            QSize saved = m_sizeBeforeEqualizer;
-            m_sizeBeforeEqualizer = QSize();
-            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+            QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeEqualizer); });
         }
     } else {
         if (!m_equalizerDock->isFloating()) {
@@ -565,11 +568,8 @@ void MainWindow::on_actionLyrics_triggered()
 {
     if (m_lyricsDock->isVisible()) {
         m_lyricsDock->hide();
-        // 延迟恢复尺寸
         if (m_sizeBeforeLyrics.isValid()) {
-            QSize saved = m_sizeBeforeLyrics;
-            m_sizeBeforeLyrics = QSize();
-            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+            QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeLyrics); });
         }
     } else {
         if (!m_lyricsDock->isFloating()) {
@@ -594,9 +594,8 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path)
                              QStringLiteral("播放列表为空，没有可编辑的曲目。"));
         return;
     }
-    // 懒创建 TagEditorWindow（dock 容器已在构造函数中创建）
     if (!m_tagEditorWindow) {
-        m_tagEditorWindow = new TagEditorWindow(QString(), m_tagEditorDock);
+        m_tagEditorWindow = new TagEditorWindow(QString(), this);
         connect(m_tagEditorWindow, &TagEditorWindow::tagsSaved, this,
                 [this](const QString &filePath) {
                     int cur = m_player->currentIndex();
@@ -607,15 +606,12 @@ void MainWindow::on_actionEditTags_triggered_forPath(const QString &path)
                 });
         m_tagEditorDock->setWidget(m_tagEditorWindow);
     }
-
     m_tagEditorWindow->reload(path);
 
     if (m_tagEditorDock->isVisible()) {
         m_tagEditorDock->hide();
         if (m_sizeBeforeTagEditor.isValid()) {
-            QSize saved = m_sizeBeforeTagEditor;
-            m_sizeBeforeTagEditor = QSize();
-            QTimer::singleShot(0, this, [this, saved]() { resize(saved); });
+            QTimer::singleShot(0, this, [this]() { resize(m_sizeBeforeTagEditor); });
         }
     } else {
         if (!m_tagEditorDock->isFloating()) {
