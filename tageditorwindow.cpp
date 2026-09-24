@@ -76,13 +76,21 @@ void TagEditorWindow::setupUI()
 void TagEditorWindow::loadFromDisk()
 {
     QFileInfo info(m_filePath);
-    m_fileLabel->setText(QStringLiteral("文件: %1").arg(info.fileName()));
+    m_fileLabel->setText(QStringLiteral("文件: %1").arg(info.fileName().isEmpty() ? "（路径无效）" : info.fileName()));
 
     TagFields fields;
-    if (!TagManager::read(m_filePath, fields)) {
-        QMessageBox::warning(this, QStringLiteral("读取失败"),
-                             QStringLiteral("无法读取该文件的标签（格式可能不支持）。"));
-        return;
+    bool ok = TagManager::read(m_filePath, fields);
+    if (!ok) {
+        m_titleEdit->setEnabled(false);
+        m_artistEdit->setEnabled(false);
+        m_albumEdit->setEnabled(false);
+        m_yearSpin->setEnabled(false);
+        m_trackSpin->setEnabled(false);
+        m_genreEdit->setEnabled(false);
+        m_lyricsEdit->setEnabled(false);
+        QMessageBox::information(this, QStringLiteral("提示"),
+                                 QStringLiteral("无法识别该文件格式，标签已清空。\n"
+                                                "支持的格式：MP3 / FLAC / OGG / M4A / WAV"));
     }
     m_titleEdit->setText(fields.title);
     m_artistEdit->setText(fields.artist);
@@ -95,6 +103,12 @@ void TagEditorWindow::loadFromDisk()
 
 void TagEditorWindow::onSave()
 {
+    // 若格式不支持，提前提示
+    if (!m_titleEdit->isEnabled()) {
+        QMessageBox::information(this, QStringLiteral("提示"),
+                                 QStringLiteral("该文件格式不支持编辑标签。"));
+        return;
+    }
     TagFields in;
     in.title = m_titleEdit->text();
     in.artist = m_artistEdit->text();
