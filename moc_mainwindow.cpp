@@ -59,8 +59,6 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         "on_actionEqualizer_triggered",
         "on_actionLyrics_triggered",
         "on_actionEditTags_triggered",
-        "on_actionEditTags_triggered_forPath",
-        "path",
         "onPositionChanged",
         "position",
         "onDurationChanged",
@@ -129,58 +127,54 @@ template <> constexpr inline auto MainWindow::qt_create_metaobjectdata<qt_meta_t
         QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_actionEditTags_triggered'
         QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'on_actionEditTags_triggered_forPath'
-        QtMocHelpers::SlotData<void(const QString &)>(19, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::QString, 20 },
-        }}),
         // Slot 'onPositionChanged'
+        QtMocHelpers::SlotData<void(qint64)>(19, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::LongLong, 20 },
+        }}),
+        // Slot 'onDurationChanged'
         QtMocHelpers::SlotData<void(qint64)>(21, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::LongLong, 22 },
         }}),
-        // Slot 'onDurationChanged'
-        QtMocHelpers::SlotData<void(qint64)>(23, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::LongLong, 24 },
-        }}),
         // Slot 'onStateChanged'
-        QtMocHelpers::SlotData<void(QMediaPlayer::PlaybackState)>(25, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 26, 27 },
+        QtMocHelpers::SlotData<void(QMediaPlayer::PlaybackState)>(23, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 24, 25 },
         }}),
         // Slot 'onPlaylistChanged'
-        QtMocHelpers::SlotData<void()>(28, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(26, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'onCurrentMediaChanged'
-        QtMocHelpers::SlotData<void(const QUrl &)>(29, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 30, 31 },
+        QtMocHelpers::SlotData<void(const QUrl &)>(27, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 28, 29 },
         }}),
         // Slot 'onPlaylistItemDoubleClicked'
-        QtMocHelpers::SlotData<void(const QModelIndex &)>(32, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 33, 34 },
+        QtMocHelpers::SlotData<void(const QModelIndex &)>(30, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 31, 32 },
         }}),
         // Slot 'onLyricsChanged'
-        QtMocHelpers::SlotData<void(const QString &)>(35, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::QString, 36 },
+        QtMocHelpers::SlotData<void(const QString &)>(33, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::QString, 34 },
         }}),
         // Slot 'onAllLyricsChanged'
-        QtMocHelpers::SlotData<void(const QList<QPair<qint64,QString>> &)>(37, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 38, 39 },
+        QtMocHelpers::SlotData<void(const QList<QPair<qint64,QString>> &)>(35, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 36, 37 },
         }}),
         // Slot 'onCurrentIndexChanged'
-        QtMocHelpers::SlotData<void(int)>(40, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Int, 34 },
+        QtMocHelpers::SlotData<void(int)>(38, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 32 },
         }}),
         // Slot 'onEqualizerSettingsChanged'
-        QtMocHelpers::SlotData<void(const QList<int> &)>(41, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 42, 43 },
+        QtMocHelpers::SlotData<void(const QList<int> &)>(39, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 40, 41 },
         }}),
         // Slot 'onPlaylistContextMenu'
-        QtMocHelpers::SlotData<void(const QPoint &)>(44, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 45, 46 },
+        QtMocHelpers::SlotData<void(const QPoint &)>(42, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 43, 44 },
         }}),
         // Slot 'onRemoveSelected'
-        QtMocHelpers::SlotData<void()>(47, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(45, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_actionCheck_Update_triggered'
-        QtMocHelpers::SlotData<void()>(48, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(46, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'on_actionAbout_triggered'
-        QtMocHelpers::SlotData<void()>(49, 2, QMC::AccessPrivate, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(47, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -220,28 +214,27 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         case 13: _t->on_actionEqualizer_triggered(); break;
         case 14: _t->on_actionLyrics_triggered(); break;
         case 15: _t->on_actionEditTags_triggered(); break;
-        case 16: _t->on_actionEditTags_triggered_forPath((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
-        case 17: _t->onPositionChanged((*reinterpret_cast<std::add_pointer_t<qint64>>(_a[1]))); break;
-        case 18: _t->onDurationChanged((*reinterpret_cast<std::add_pointer_t<qint64>>(_a[1]))); break;
-        case 19: _t->onStateChanged((*reinterpret_cast<std::add_pointer_t<QMediaPlayer::PlaybackState>>(_a[1]))); break;
-        case 20: _t->onPlaylistChanged(); break;
-        case 21: _t->onCurrentMediaChanged((*reinterpret_cast<std::add_pointer_t<QUrl>>(_a[1]))); break;
-        case 22: _t->onPlaylistItemDoubleClicked((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
-        case 23: _t->onLyricsChanged((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
-        case 24: _t->onAllLyricsChanged((*reinterpret_cast<std::add_pointer_t<QList<std::pair<qint64,QString>>>>(_a[1]))); break;
-        case 25: _t->onCurrentIndexChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
-        case 26: _t->onEqualizerSettingsChanged((*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[1]))); break;
-        case 27: _t->onPlaylistContextMenu((*reinterpret_cast<std::add_pointer_t<QPoint>>(_a[1]))); break;
-        case 28: _t->onRemoveSelected(); break;
-        case 29: _t->on_actionCheck_Update_triggered(); break;
-        case 30: _t->on_actionAbout_triggered(); break;
+        case 16: _t->onPositionChanged((*reinterpret_cast<std::add_pointer_t<qint64>>(_a[1]))); break;
+        case 17: _t->onDurationChanged((*reinterpret_cast<std::add_pointer_t<qint64>>(_a[1]))); break;
+        case 18: _t->onStateChanged((*reinterpret_cast<std::add_pointer_t<QMediaPlayer::PlaybackState>>(_a[1]))); break;
+        case 19: _t->onPlaylistChanged(); break;
+        case 20: _t->onCurrentMediaChanged((*reinterpret_cast<std::add_pointer_t<QUrl>>(_a[1]))); break;
+        case 21: _t->onPlaylistItemDoubleClicked((*reinterpret_cast<std::add_pointer_t<QModelIndex>>(_a[1]))); break;
+        case 22: _t->onLyricsChanged((*reinterpret_cast<std::add_pointer_t<QString>>(_a[1]))); break;
+        case 23: _t->onAllLyricsChanged((*reinterpret_cast<std::add_pointer_t<QList<std::pair<qint64,QString>>>>(_a[1]))); break;
+        case 24: _t->onCurrentIndexChanged((*reinterpret_cast<std::add_pointer_t<int>>(_a[1]))); break;
+        case 25: _t->onEqualizerSettingsChanged((*reinterpret_cast<std::add_pointer_t<QList<int>>>(_a[1]))); break;
+        case 26: _t->onPlaylistContextMenu((*reinterpret_cast<std::add_pointer_t<QPoint>>(_a[1]))); break;
+        case 27: _t->onRemoveSelected(); break;
+        case 28: _t->on_actionCheck_Update_triggered(); break;
+        case 29: _t->on_actionAbout_triggered(); break;
         default: ;
         }
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
         switch (_id) {
         default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
-        case 26:
+        case 25:
             switch (*reinterpret_cast<int*>(_a[1])) {
             default: *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType(); break;
             case 0:
@@ -271,14 +264,14 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 31)
+        if (_id < 30)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 31;
+        _id -= 30;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 31)
+        if (_id < 30)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 31;
+        _id -= 30;
     }
     return _id;
 }
